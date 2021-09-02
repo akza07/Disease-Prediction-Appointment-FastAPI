@@ -1,9 +1,18 @@
 import joblib as jb
 from fastapi import FastAPI
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 model = jb.load('trained_model')
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # input sample for tb
 # percieved_symptoms = ['chest_pain','cough','fatigue','high_fever','loss_of_appetite','malaise','sweating','weight_loss','swelled_lymph_nodes']
