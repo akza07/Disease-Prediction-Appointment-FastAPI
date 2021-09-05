@@ -1,23 +1,55 @@
 import joblib as jb
-from fastapi import FastAPI
-from typing import List
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import List, Optional
+
+from .schemas import Symptoms, TokenData
+from sqlalchemy.orm import Session
+from . import services, schemas, models
+from .database import SessionLocal, engine
+
+from datetime import timedelta, time
+from jose import JWTError,jwt
+
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
+
+# dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+        
+
 model = jb.load('trained_model')
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+@app.post('/token', response_model=schemas.Token)
+def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user_dict = services.get_user_by_email(db, form_data.username)
+    if not user_dict:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Email or Password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = services.create_access_token(
+        data={"sub": user_dict.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+    
 # input sample for tb
-# percieved_symptoms = ['chest_pain','cough','fatigue','high_fever','loss_of_appetite','malaise','sweating','weight_loss','swelled_lymph_nodes']
-@app.post("/check_disease")
-def check_disease(percieved_symptoms : List[str]):
+#percieved_symptoms = {["chest_pain","cough","fatigue","high_fever","loss_of_appetite","malaise","sweating","weight_loss","swelled_lymph_nodes"]}
+
+@app.post("/check_disease/")
+async def check_disease( symptoms: Symptoms):
+    #print (f"{percieved_symptoms=}")
 
     #disease_list = [
         #'Fungal infection','Allergy','GERD','Chronic cholestasis','Drug Reaction','Peptic ulcer diseae','AIDS','Diabetes ',
@@ -58,7 +90,7 @@ def check_disease(percieved_symptoms : List[str]):
     # init all array values to 0
     test_symptoms = [0]*len(symptoms_list)
     for i in range(len(symptoms_list)):
-        for p_symptom in percieved_symptoms:
+        for p_symptom in symptoms.percieved_symptoms:
             if  p_symptom == symptoms_list[i]:
                 test_symptoms[i] = 1
     input_test = [ test_symptoms ]
@@ -67,4 +99,39 @@ def check_disease(percieved_symptoms : List[str]):
         "result" : model.predict(input_test)[0]
         }
     return result
+
+
+@app.post('/signup', response_model=schemas.UserCreate)
+def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = services.get_user_by_email(db, user_data.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="E-mail already Registered")
+    return services.create_user(db, user_data)
+
+
+
+@app.post('/user/me', response_model=schemas.UserData)
+def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not Validate the credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
+    try:
+        payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username = email)
+    except JWTError:
+        raise credentials_exception
+    user = services.get_user_by_email(db, email=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+        
+
 
