@@ -110,12 +110,18 @@ async def check_disease( symptoms: Symptoms):
     return result
 
 
-@app.post('/signup', response_model=schemas.UserCreate)
-def create_user(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post('/signup', response_model=schemas.ResponseUserData)
+def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
     db_user = services.get_user_by_email(db, user_data.email)
     if db_user:
         raise HTTPException(status_code=400, detail="E-mail already Registered")
-    return services.create_user(db, user_data)
+    access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = services.create_access_token(
+        data={"sub": user_data.email}, expires_delta=access_token_expires
+    )
+    data = services.create_user(db, user_data)
+    data.token = access_token
+    return data
 
 
 

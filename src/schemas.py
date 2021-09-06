@@ -14,10 +14,6 @@ class UserData(User):
     class Config:
         orm_mode = True
 
-class UserCreate(UserData):
-    password: str
-    class Config:
-        orm_mode = True
 
 class Token(BaseModel):
     access_token: str
@@ -25,3 +21,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+    
+class UserCreate(UserData):
+    password: str
+
+class ResponseUserData(UserData):
+    token: str
+    class Config:
+        orm_mode = True
