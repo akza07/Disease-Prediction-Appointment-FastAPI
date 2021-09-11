@@ -54,11 +54,11 @@ def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessio
     return {"access_token": access_token, "token_type": "bearer"}
     
 # input sample for tb
-#percieved_symptoms = {["chest_pain","cough","fatigue","high_fever","loss_of_appetite","malaise","sweating","weight_loss","swelled_lymph_nodes"]}
+#perceived_symptoms = {["chest_pain","cough","fatigue","high_fever","loss_of_appetite","malaise","sweating","weight_loss","swelled_lymph_nodes"]}
 
 @app.post("/check_disease/")
 async def check_disease( symptoms: Symptoms):
-    #print (f"{percieved_symptoms=}")
+    #print (f"{perceived_symptoms=}")
 
     #disease_list = [
         #'Fungal infection','Allergy','GERD','Chronic cholestasis','Drug Reaction','Peptic ulcer diseae','AIDS','Diabetes ',
@@ -95,17 +95,70 @@ async def check_disease( symptoms: Symptoms):
         'silver_like_dusting','small_dents_in_nails','inflammatory_nails','blister','red_sore_around_nose',
         'yellow_crust_ooze'
         ]
+    Rheumatologist = ['Osteoarthristis','Arthritis']
+       
+    Cardiologist = [ 'Heart attack','Bronchial Asthma','Hypertension ']
+    
+    ENT_specialist = ['(vertigo) Paroymsal  Positional Vertigo','Hypothyroidism' ]
+
+    Orthopedist = []
+
+    Neurologist = ['Varicose veins','Paralysis (brain hemorrhage)','Migraine','Cervical spondylosis']
+
+    Allergist_Immunologist = ['Allergy','Pneumonia','AIDS','Common Cold','Tuberculosis','Malaria','Dengue','Typhoid']
+
+    Urologist = [ 'Urinary tract infection','Dimorphic hemmorhoids(piles)']
+
+    Dermatologist = ['Acne','Chicken pox','Fungal infection','Psoriasis','Impetigo']
+
+    Gastroenterologist = ['Peptic ulcer diseae', 'GERD','Chronic cholestasis','Drug Reaction','Gastroenteritis','Hepatitis E',
+    'Alcoholic hepatitis','Jaundice','hepatitis A','Hepatitis B', 'Hepatitis C', 'Hepatitis D','Diabetes ','Hypoglycemia']
+
+    
 
     # init all array values to 0
     test_symptoms = [0]*len(symptoms_list)
     for i in range(len(symptoms_list)):
-        for p_symptom in symptoms.percieved_symptoms:
+        for p_symptom in symptoms.perceived_symptoms:
             if  p_symptom == symptoms_list[i]:
                 test_symptoms[i] = 1
     input_test = [ test_symptoms ]
+    disease =  model.predict(input_test)[0]
+
+    if disease in Rheumatologist :
+           specialist = "Rheumatologist"
+           
+    if disease in Cardiologist :
+        specialist = "Cardiologist"
+        
+
+    elif disease in ENT_specialist :
+        specialist = "ENT specialist"
+    
+    elif disease in Orthopedist :
+        specialist = "Orthopedist"
+    
+    elif disease in Neurologist :
+        specialist = "Neurologist"
+    
+    elif disease in Allergist_Immunologist :
+        specialist = "Allergist/Immunologist"
+    
+    elif disease in Urologist :
+        specialist = "Urologist"
+    
+    elif disease in Dermatologist :
+        specialist = "Dermatologist"
+    
+    elif disease in Gastroenterologist :
+        specialist = "Gastroenterologist"
+    
+    else :
+        specialist = "Other"
 
     result = {
-        "result" : model.predict(input_test)[0]
+        "result" : disease,
+        "Specialization" : specialist
         }
     return result
 
