@@ -2,13 +2,9 @@ from pydantic import BaseModel
 from typing import Optional, List
 
 class Symptoms(BaseModel):
-    percieved_symptoms: List[str]
+    perceived_symptoms: List[str]
 
-class User(BaseModel):
-    # username: str
-    is_active: Optional[bool]
-
-class UserData(User):
+class UserData(BaseModel):
     name: str
     email: str
     class Config:
@@ -30,3 +26,6 @@ class ResponseUserData(UserData):
     token: str
     class Config:
         orm_mode = True
+
+class Consultation_data(Symptoms):
+    required_doctor: str

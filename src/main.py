@@ -156,15 +156,15 @@ async def check_disease( symptoms: Symptoms):
     else :
         specialist = "Other"
 
-    result = {
-        "result" : disease,
-        "Specialization" : specialist
-        }
+    result = schemas.Consultation_data(
+        perceived_symptoms = symptoms.perceived_symptoms,
+        required_doctor = specialist
+    )
     return result
 
 
-@app.post('/signup', response_model=schemas.ResponseUserData)
-def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
+@app.post('/signup')
+async def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
     db_user = services.get_user_by_email(db, user_data.email)
     if db_user:
         raise HTTPException(status_code=400, detail="E-mail already Registered")
@@ -179,7 +179,7 @@ def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
 
 
 @app.post('/user/me', response_model=schemas.UserData)
-def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not Validate the credentials",
@@ -198,6 +198,35 @@ def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(g
     if user is None:
         raise credentials_exception
     return user
+
+@app.put('/user/appointment/')
+async def make_appointment(data:schemas.Consultation_data, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+    status_code=401,
+    detail="Could not Validate the credentials",
+    headers={"WWW-Authenticate": "Bearer"}
+    )
+
+    try:
+        payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username = email)
+    except JWTError:
+        raise credentials_exception
+    user = services.get_user_by_email(db, email=token_data.username)
+    if user is None:
+        raise credentials_exception
+    stat = services.make_appointment(db, user.id, data)
+    print(stat)
+
+@app.put('/doctor')
+    
+    
+
+    
+
 
 
         
