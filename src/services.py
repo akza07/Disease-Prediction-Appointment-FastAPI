@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.sqltypes import Integer
 from . import models, schemas
 from jose import JWTError, jwt #JSON Web Token
 from datetime import datetime, time, timedelta
@@ -13,11 +14,18 @@ def get_user_by_email(db: Session, email: str):
     print("Checking existing users")
     return db.query(models.UserBase).filter(models.UserBase.email == email).first()
 
-def get_doctor(db: Session, required_doctor: str):
+def get_user_by_id(db: Session, id: int):
+    print("Checking existing users")
+    return db.query(models.UserBase).filter(models.UserBase.id == id).first()
+
+
+def get_doctor_by_specialization(db: Session, required_doctor: str):
     print(required_doctor)
     doc = db.query(models.Doctors).filter(models.Doctors.specialization == required_doctor).first()
     print(doc)
     return doc.id
+def get_doctor_by_email(db: Session, email: str):
+    return db.query(models.Doctors).filter(models.Doctors.email == email).first()
 
 def create_user(db: Session, user: schemas.UserCreate):
     fake_hashed_password = user.password+"temp_pwd"
@@ -25,7 +33,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         # username = user.username,
         name = user.name,
         email = user.email,
-        password = fake_hashed_password,
+        password_hashed = fake_hashed_password,
         # is_active = True
     )
     print(db_user)
@@ -47,7 +55,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def make_appointment(db:Session, current_user_id:int, data: schemas.Consultation_data):
     appointment = models.Consultation(
         user_id = current_user_id,
-        doctor_id = get_doctor(db, data.required_doctor),
+        patient_name = get_user_by_id(db, current_user_id).name,
+        doctor_id = get_doctor_by_specialization(db, data.required_doctor),
         required_doctor = data.required_doctor,
         symptoms = str(data.perceived_symptoms),
         status = False
@@ -57,3 +66,9 @@ def make_appointment(db:Session, current_user_id:int, data: schemas.Consultation
     db.refresh(appointment)
     # print(db.query(models.Consultation).filter(models.Consultation.user_id == current_user_id).first())
     return db.query(models.Consultation).filter(models.Consultation.user_id == current_user_id).first()
+
+def get_patients_for_doctor(db: Session, id: int, skip: int = 0, limit: int = 100):
+    # doc_info = db.query(models.Doctors).filter(models.Doctors.id == id)
+    print(f"{id=}")
+    patients = db.query(models.Consultation).filter(models.Consultation.doctor_id == id).offset(skip).limit(limit).all()
+    return patients

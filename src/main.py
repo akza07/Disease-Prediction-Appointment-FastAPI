@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.sql.sqltypes import Integer
 
 from .schemas import Symptoms, TokenData
 from sqlalchemy.orm import Session
@@ -42,9 +43,18 @@ model = jb.load('trained_model')
 def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user_dict = services.get_user_by_email(db, form_data.username)
     if not user_dict:
+        user_dict = services.get_doctor_by_email(db, form_data.username)
+    if not user_dict:
         raise HTTPException(
             status_code=401,
-            detail="Invalid Email or Password",
+            detail="Invalid Email",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    hashed_pwd = form_data.password+"temp_pwd"
+    if not hashed_pwd == user_dict.password_hashed:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -221,7 +231,28 @@ async def make_appointment(data:schemas.Consultation_data, token: str = Depends(
     stat = services.make_appointment(db, user.id, data)
     print(stat)
 
-@app.put('/doctor')
+@app.post('/doctor', response_model = List[schemas.ConsultationResponse])
+async def doctor_login(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+    status_code=401,
+    detail="Could not Validate the credentials",
+    headers={"WWW-Authenticate": "Bearer"}
+    )
+
+    try:
+        payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(username = email)
+    except JWTError:
+        raise credentials_exception
+    doctor = services.get_doctor_by_email(db, email=token_data.username)
+    if doctor is None:
+        raise credentials_exception
+    return services.get_patients_for_doctor(db, doctor.id)
+    
+
     
     
 

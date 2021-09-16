@@ -13,7 +13,7 @@ class UserBase(Base):
     # username = Column(String, unique=True)
     name = Column(String)
     email = Column(String, unique=True)
-    password = Column(String)
+    password_hashed = Column(String)
     # is_active = Column(Boolean)
     consultation = relationship("Consultation", back_populates="users")
     
@@ -23,6 +23,8 @@ class UserBase(Base):
 class Doctors(Base):
     __tablename__ = "doctors"
     id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True)
+    password_hashed = Column(String)
     name = Column(String)
     specialization = Column(String)
     # is_active = Column(Boolean)
@@ -33,6 +35,7 @@ class Consultation(Base):
     __tablename__ = "consultation"
     appointment_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    patient_name = Column(String)
     required_doctor = Column(String)
     symptoms = Column(String)
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
