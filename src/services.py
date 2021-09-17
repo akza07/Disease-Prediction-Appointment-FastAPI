@@ -18,6 +18,11 @@ def get_user_by_id(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.UserBase).filter(models.UserBase.id == id).first()
 
+def is_doctor(db: Session, email: str):
+    if get_doctor_by_email(db, email) is None:
+        return False
+    return True
+
 def has_appointment(db: Session, id: int):
     return db.query(models.Consultation).filter(models.Consultation.user_id == id).first()
 
