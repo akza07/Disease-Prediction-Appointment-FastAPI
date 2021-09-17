@@ -38,6 +38,7 @@ class Consultation(Base):
     patient_name = Column(String)
     required_doctor = Column(String)
     symptoms = Column(String)
+    predicted_disease = Column(String)
     doctor_id = Column(Integer, ForeignKey("doctors.id"))
     status = Column(Boolean)
 

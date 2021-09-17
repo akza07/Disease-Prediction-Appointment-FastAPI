@@ -31,10 +31,12 @@ class ResponseUserData(UserData):
 
 class Consultation_data(Symptoms):
     required_doctor: str
+    predicted_disease: str 
 
 class ConsultationResponse(BaseModel):
     appointment_id :int
     user_id :int
+    patient_name: str
     required_doctor :str
     symptoms: str
     doctor_id: int

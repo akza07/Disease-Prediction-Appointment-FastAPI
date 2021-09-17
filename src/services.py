@@ -18,6 +18,9 @@ def get_user_by_id(db: Session, id: int):
     print("Checking existing users")
     return db.query(models.UserBase).filter(models.UserBase.id == id).first()
 
+def has_appointment(db: Session, id: int):
+    return db.query(models.Consultation).filter(models.Consultation.user_id == id).first()
+
 
 def get_doctor_by_specialization(db: Session, required_doctor: str):
     print(required_doctor)
@@ -26,6 +29,9 @@ def get_doctor_by_specialization(db: Session, required_doctor: str):
     return doc.id
 def get_doctor_by_email(db: Session, email: str):
     return db.query(models.Doctors).filter(models.Doctors.email == email).first()
+
+def get_doctor_by_id(db: Session, id: int):
+    return db.query(models.Doctors).filter(models.Doctors.id == id).first()
 
 def create_user(db: Session, user: schemas.UserCreate):
     fake_hashed_password = user.password+"temp_pwd"
@@ -53,12 +59,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 def make_appointment(db:Session, current_user_id:int, data: schemas.Consultation_data):
+
     appointment = models.Consultation(
         user_id = current_user_id,
         patient_name = get_user_by_id(db, current_user_id).name,
         doctor_id = get_doctor_by_specialization(db, data.required_doctor),
         required_doctor = data.required_doctor,
         symptoms = str(data.perceived_symptoms),
+        predicted_disease = data.predicted_disease,
         status = False
     )
     db.add(appointment)

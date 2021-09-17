@@ -168,6 +168,7 @@ async def check_disease( symptoms: Symptoms):
 
     result = schemas.Consultation_data(
         perceived_symptoms = symptoms.perceived_symptoms,
+        predicted_disease = disease,
         required_doctor = specialist
     )
     return result
@@ -177,7 +178,7 @@ async def check_disease( symptoms: Symptoms):
 async def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
     db_user = services.get_user_by_email(db, user_data.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="E-mail already Registered")
+         HTTPException(staturaises_code=400, detail="E-mail already Registered")
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = services.create_access_token(
         data={"sub": user_data.email}, expires_delta=access_token_expires
@@ -188,7 +189,7 @@ async def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_
 
 
 
-@app.post('/user/me', response_model=schemas.UserData)
+@app.post('/user/me')
 async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=401,
@@ -207,7 +208,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
     user = services.get_user_by_email(db, email=token_data.username)
     if user is None:
         raise credentials_exception
-    return user
+    return {
+        "my_info": user,
+        "appointment" : services.has_appointment(db, user.id)
+    }
 
 @app.put('/user/appointment/')
 async def make_appointment(data:schemas.Consultation_data, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
@@ -228,11 +232,15 @@ async def make_appointment(data:schemas.Consultation_data, token: str = Depends(
     user = services.get_user_by_email(db, email=token_data.username)
     if user is None:
         raise credentials_exception
-    stat = services.make_appointment(db, user.id, data)
-    print(stat)
+    if services.has_appointment(db, user.id):
+        raise HTTPException(staturaises_code=400, detail="User already has an Appointment")
+    appointment = services.make_appointment(db, user.id, data)
+    return {"appointment" : appointment,
+            "doctor" : services.get_doctor_by_id(db, appointment.doctor_id).name
+    }
 
-@app.post('/doctor', response_model = List[schemas.ConsultationResponse])
-async def doctor_login(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+@app.post('doctor/show_patients', response_model = List[schemas.ConsultationResponse])
+async def show_appointments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
     status_code=401,
     detail="Could not Validate the credentials",
@@ -253,7 +261,7 @@ async def doctor_login(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return services.get_patients_for_doctor(db, doctor.id)
 
 @app.post('/doctor/me', response_model = schemas.Doctor_info)
-async def current_doctor(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+async def get_current_doctor(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
     status_code=401,
     detail="Could not Validate the credentials",
