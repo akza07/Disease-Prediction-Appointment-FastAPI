@@ -166,7 +166,7 @@ async def check_disease( symptoms: Symptoms):
     else :
         specialist = "Other"
 
-    result = schemas.Consultation_data(
+    result = schemas.ConsultationData(
         perceived_symptoms = symptoms.perceived_symptoms,
         predicted_disease = disease,
         required_doctor = specialist
@@ -207,15 +207,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
         raise credentials_exception
 
     if services.is_doctor(db, token_data.username):
-        return services.get_doctor_by_email(db, token_data.username)
+        user = services.get_doctor_by_email(db, token_data.username)
+        delattr(user, "password_hashed")
+        return {
+            "my_info" : user,
+            "role" : "doctor"
+        }
     user = services.get_user_by_email(db, token_data.username)
+    delattr(user, "password_hashed")
     return {
         "my_info": services.get_user_by_email(db, token_data.username),
-        "appointment" : services.has_appointment(db, user.id)
+        "appointment" : services.has_appointment(db, user.id),
+        "role":"user"
     }
 
 @app.put('/user/appointment/')
-async def make_appointment(data:schemas.Consultation_data, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+async def make_appointment(data:schemas.ConsultationData, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
     status_code=401,
     detail="Could not Validate the credentials",
@@ -260,25 +267,6 @@ async def show_appointments(skip: int = 0, limit: int = 100, db: Session = Depen
     if doctor is None:
         raise credentials_exception
     return services.get_patients_for_doctor(db, doctor.id)
-
-# @app.post('/doctor/me', response_model = schemas.Doctor_info)
-# async def get_current_doctor(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
-#     credentials_exception = HTTPException(
-#     status_code=401,
-#     detail="Could not Validate the credentials",
-#     headers={"WWW-Authenticate": "Bearer"}
-#     )
-
-#     try:
-#         payload = jwt.decode(token, services.SECRET_KEY, algorithms=[services.ALGORITHM])
-#         email: str = payload.get("sub")
-#         if email is None:
-#             raise credentials_exception
-#         token_data = schemas.TokenData(username = email)
-#     except JWTError:
-#         raise credentials_exception
-#     doctor = services.get_doctor_by_email(db, email=token_data.username)
-#     return doctor
 
     
 

@@ -63,7 +63,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def make_appointment(db:Session, current_user_id:int, data: schemas.Consultation_data):
+def make_appointment(db:Session, current_user_id:int, data: schemas.ConsultationData):
 
     appointment = models.Consultation(
         user_id = current_user_id,

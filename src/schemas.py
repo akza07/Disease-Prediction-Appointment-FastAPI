@@ -1,12 +1,13 @@
 from pydantic import BaseModel
 from typing import Optional, List
 
-from sqlalchemy.sql.sqltypes import String
+from sqlalchemy.sql.sqltypes import Integer, String
 
 class Symptoms(BaseModel):
     perceived_symptoms: List[str]
 
 class UserData(BaseModel):
+    id: int
     name: str
     email: str
     class Config:
@@ -29,7 +30,7 @@ class ResponseUserData(UserData):
     class Config:
         orm_mode = True
 
-class Consultation_data(Symptoms):
+class ConsultationData(Symptoms):
     required_doctor: str
     predicted_disease: str 
 
@@ -39,18 +40,9 @@ class ConsultationResponse(BaseModel):
     patient_name: str
     required_doctor :str
     symptoms: str
+    predicted_disease: str
     doctor_id: int
     status: bool
 
     class Config:
         orm_mode = True
-
-class Doctor_info(BaseModel):
-    id: int
-    email: str
-    name: str
-    specialization: str
-
-    class Config:
-        orm_mode = True
-        
