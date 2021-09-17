@@ -241,7 +241,9 @@ async def make_appointment(data:schemas.ConsultationData, token: str = Depends(o
     if user is None:
         raise credentials_exception
     if services.has_appointment(db, user.id):
-        raise HTTPException(staturaises_code=400, detail="User already has an Appointment")
+        raise HTTPException(status_code=400, detail="User already has an Appointment")
+    if data.required_doctor == "Other":
+        raise HTTPException(status_code=500, detail="NO_DOCTOR_AVAILABLE")
     appointment = services.make_appointment(db, user.id, data)
     return {"appointment" : appointment,
             "doctor" : services.get_doctor_by_id(db, appointment.doctor_id).name
