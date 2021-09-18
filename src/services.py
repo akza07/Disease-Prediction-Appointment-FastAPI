@@ -31,7 +31,7 @@ def get_doctor_by_specialization(db: Session, required_doctor: str):
     print(required_doctor)
     doc = db.query(models.Doctors).filter(models.Doctors.specialization == required_doctor).first()
     print(doc)
-    return doc.id
+    return doc
 def get_doctor_by_email(db: Session, email: str):
     return db.query(models.Doctors).filter(models.Doctors.email == email).first()
 
@@ -69,7 +69,7 @@ def make_appointment(db:Session, current_user_id:int, data: schemas.Consultation
     appointment = models.Consultation(
         user_id = current_user_id,
         patient_name = get_user_by_id(db, current_user_id).name,
-        doctor_id = get_doctor_by_specialization(db, data.required_doctor),
+        doctor_id = get_doctor_by_specialization(db, data.required_doctor).id,
         required_doctor = data.required_doctor,
         symptoms = str(data.perceived_symptoms),
         predicted_disease = data.predicted_disease,

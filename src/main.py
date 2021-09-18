@@ -245,11 +245,12 @@ async def make_appointment(data:schemas.ConsultationData, token: str = Depends(o
         raise credentials_exception
     if services.has_appointment(db, user.id):
         raise HTTPException(status_code=400, detail="User already has an Appointment")
-    if data.required_doctor == "Other":
+    if data.required_doctor == "Other" or services.get_doctor_by_specialization(db, data.required_doctor) is None:
         raise HTTPException(status_code=500, detail="NO_DOCTOR_AVAILABLE")
     appointment = services.make_appointment(db, user.id, data)
-    return {"appointment" : appointment,
-            "doctor" : services.get_doctor_by_id(db, appointment.doctor_id).name
+    return {
+        "appointment" : appointment,
+        "doctor" : services.get_doctor_by_id(db, appointment.doctor_id).name
     }
 
 @app.post('/doctor/show_patients', response_model = List[schemas.ConsultationResponse])
