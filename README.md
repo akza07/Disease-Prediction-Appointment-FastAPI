@@ -10,3 +10,5 @@ Predict the disease based on given input using MultinomialMB
 5. Go to `http://127.0.0.1:8000` or as per your configuration.
 
 use `http://127.0.0.1:8000/docs` to know and test the API end-points
+
+The Front-end is available at `https://github.com/TrisRdz/medicare-web`
