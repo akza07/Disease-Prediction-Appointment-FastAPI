@@ -51,6 +51,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    delattr(db_user, "password_hashed")
     return db_user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
