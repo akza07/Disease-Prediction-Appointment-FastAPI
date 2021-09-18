@@ -214,10 +214,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
             "role" : "doctor"
         }
     user = services.get_user_by_email(db, token_data.username)
+    appointment = services.has_appointment(db, user.id)
     delattr(user, "password_hashed")
+    appointment.doctor_name = services.get_doctor_by_id(db, appointment.doctor_id).name
     return {
         "my_info": services.get_user_by_email(db, token_data.username),
-        "appointment" : services.has_appointment(db, user.id),
+        "appointment" : appointment,
         "role":"user"
     }
 
