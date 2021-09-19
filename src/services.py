@@ -49,10 +49,10 @@ def get_doctor_by_specialization(db: Session, required_doctor: str):
     if required_doctor == "Other":
         required_doctor = "Physician"
     doc = db.query(models.Doctors).filter(models.Doctors.specialization == required_doctor).all()
-    if doc is not None:
-        rand = random.randint(1, len(doc))  # selecting random
-        return doc[rand]
-    return doc
+    if not doc:
+        return None
+    rand = random.randint(1, len(doc))  # selecting random
+    return doc[rand]
 
 
 

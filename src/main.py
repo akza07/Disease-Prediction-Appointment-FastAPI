@@ -216,7 +216,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
             "role" : "doctor"
         }
     
-    if services.get_admin(db, token_data.username):
+    if services.get_admin_by_mail(db, token_data.username):
         return {
             "my_info": token_data.username,
             "role" : "admin"
