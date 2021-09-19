@@ -134,7 +134,7 @@ def add_doctor(db: Session, data: schemas.DoctorWithPassword):
     return db.query(models.Doctors).filter(models.Doctors.email == data.email).first()
 
 def delete_appointment(db: Session, id: int):
-    deleted = db.query(models.Consultation).filter(models.Consultation.id == id).delete()
+    deleted = db.query(models.Consultation).filter(models.Consultation.appointment_id == id).delete()
     if deleted:
         return True
     return False
