@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import List, Optional
 
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.sql.expression import false
 from sqlalchemy.sql.sqltypes import Integer
 
 from .schemas import Symptoms, TokenData
@@ -68,7 +69,7 @@ def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessio
 # input sample for tb
 #perceived_symptoms = {["chest_pain","cough","fatigue","high_fever","loss_of_appetite","malaise","sweating","weight_loss","swelled_lymph_nodes"]}
 
-@app.post("/check_disease/")
+@app.get("/check_disease/")
 async def check_disease( symptoms: Symptoms):
     #print (f"{perceived_symptoms=}")
 
@@ -191,7 +192,7 @@ async def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_
 
 
 
-@app.post('/me')
+@app.get('/me')
 async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=401,
@@ -234,7 +235,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
         "role":"user"
     }
 
-@app.put('/appointment/add')
+@app.post('/appointment/add')
 async def make_appointment(data:schemas.ConsultationData, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
     status_code=401,
@@ -285,8 +286,11 @@ async def show_appointments(skip: int = 0, limit: int = 100, db: Session = Depen
     return services.get_patients_for_doctor(db, doctor.id)
 
 
-@app.put('/admin/add_doctor')
+@app.post('/admin/add_doctor')
 async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+    db_user = get_doctor_by_email(db, doctor_data.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="E-mail already Registered")
     response = services.add_doctor(db, doctor_data)
     delattr(response, "password_hashed")
     return{
@@ -294,9 +298,17 @@ async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depen
         "info" : response
     }
 
-@app.delete('/appointment/delete')
+@app.post('/appointment/delete')
 async def delete_appointment(data : dict, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    services.delete_appointment(db, data.id)
+    status = services.delete_appointment(db, data.id)
+    if status:
+        return {
+            "status": "Appointment deleted Successfully!"
+        }
+    raise HTTPException(
+        status_code=500,
+        detail="Couldn't find the Appointment"
+    )
 
 
 

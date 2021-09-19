@@ -51,8 +51,9 @@ def get_doctor_by_specialization(db: Session, required_doctor: str):
     doc = db.query(models.Doctors).filter(models.Doctors.specialization == required_doctor).all()
     if not doc:
         return None
-    rand = random.randint(1, len(doc))  # selecting random
-    return doc[rand]
+    length = len(doc)
+    index = random.randint(1,length)  # selecting random
+    return doc[index-1]
 
 
 
@@ -135,6 +136,5 @@ def add_doctor(db: Session, data: schemas.DoctorWithPassword):
 def delete_appointment(db: Session, id: int):
     deleted = db.query(models.Consultation).filter(models.Consultation.id == id).delete()
     if deleted:
-        return{
-            "status" : "Appointment deleted Successfully"
-        }
+        return True
+    return False
