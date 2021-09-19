@@ -288,7 +288,7 @@ async def show_appointments(skip: int = 0, limit: int = 100, db: Session = Depen
 
 @app.post('/admin/add_doctor')
 async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
-    db_user = get_doctor_by_email(db, doctor_data.email)
+    db_user = services.get_doctor_by_email(db, doctor_data.email)
     if db_user:
         raise HTTPException(status_code=400, detail="E-mail already Registered")
     response = services.add_doctor(db, doctor_data)
