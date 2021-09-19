@@ -1,7 +1,7 @@
 from src.schemas import Symptoms
 from typing import List, Optional
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.sql.schema import ForeignKey, PrimaryKeyConstraint
 from .database import Base
 
 from sqlalchemy import Column, Integer, String, Boolean
@@ -44,3 +44,10 @@ class Consultation(Base):
 
     doctors = relationship("Doctors", back_populates="consultation")
     users = relationship("UserBase", back_populates="consultation")
+
+class Admins(Base):
+     __tablename__ = "admins"
+     id = Column(Integer, primary_key=True)
+     email = Column(String, unique=True)
+     password_hashed = Column(String)
+

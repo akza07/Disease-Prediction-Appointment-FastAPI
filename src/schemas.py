@@ -46,3 +46,12 @@ class ConsultationResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class DoctorData(BaseModel):
+    id: int
+    email: str
+    name: str
+    specialization: str
+
+class DoctorWithPassword(DoctorData):
+    password: str

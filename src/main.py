@@ -45,13 +45,15 @@ def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessio
     if not user_dict:
         user_dict = services.get_doctor_by_email(db, form_data.username)
     if not user_dict:
+        user_dict = services.get_admin_by_mail(db,form_data.username)
+    if not user_dict:
         raise HTTPException(
             status_code=401,
             detail="Invalid Email",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    hashed_pwd = form_data.password+"temp_pwd"
-    if not hashed_pwd == user_dict.password_hashed:
+    #hashed_pwd = services.create_hashed_password(form_data.password)
+    if not services.verify_hashed_password(form_data.password, user_dict.password_hashed):
         raise HTTPException(
             status_code=401,
             detail="Invalid Password",
@@ -213,6 +215,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
             "my_info" : user,
             "role" : "doctor"
         }
+    
+    if services.get_admin(db, token_data.username):
+        return {
+            "my_info": token_data.username,
+            "role" : "admin"
+        }
+
+
     user = services.get_user_by_email(db, token_data.username)
     appointment = services.has_appointment(db, user.id)
     delattr(user, "password_hashed")
@@ -245,7 +255,7 @@ async def make_appointment(data:schemas.ConsultationData, token: str = Depends(o
         raise credentials_exception
     if services.has_appointment(db, user.id):
         raise HTTPException(status_code=400, detail="User already has an Appointment")
-    if data.required_doctor == "Other" or services.get_doctor_by_specialization(db, data.required_doctor) is None:
+    if services.get_doctor_by_specialization(db, data.required_doctor) is None:
         raise HTTPException(status_code=500, detail="NO_DOCTOR_AVAILABLE")
     appointment = services.make_appointment(db, user.id, data)
     return {
@@ -273,6 +283,19 @@ async def show_appointments(skip: int = 0, limit: int = 100, db: Session = Depen
     if doctor is None:
         raise credentials_exception
     return services.get_patients_for_doctor(db, doctor.id)
+
+
+@app.put('/admin/add_doctor')
+async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
+    response = services.add_doctor(db, doctor_data)
+    delattr(response, "password_hashed")
+    return{
+        "status": "Doctor added successfully!",
+        "info" : response
+    }
+
+
+
 
     
 
