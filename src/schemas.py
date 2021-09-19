@@ -55,3 +55,6 @@ class DoctorData(BaseModel):
 
 class DoctorWithPassword(DoctorData):
     password: str
+
+class DeleteAppointmentRequest(BaseModel):
+    id: int

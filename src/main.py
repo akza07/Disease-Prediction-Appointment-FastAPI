@@ -299,8 +299,9 @@ async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depen
     }
 
 @app.post('/appointment/delete')
-async def delete_appointment(data : dict, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    status = services.delete_appointment(db, data.id)
+async def delete_appointment(data : schemas.DeleteAppointmentRequest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    
+    status = services.delete_appointment(db, int(data.id))
     if status:
         return {
             "status": "Appointment deleted Successfully!"
