@@ -131,3 +131,10 @@ def add_doctor(db: Session, data: schemas.DoctorWithPassword):
     db.commit()
     db.refresh(doctor_data)
     return db.query(models.Doctors).filter(models.Doctors.email == data.email).first()
+
+def delete_appointment(db: Session, id: int):
+    deleted = db.query(models.Consultation).filter(models.Consultation.id == id).delete()
+    if deleted:
+        return{
+            "status" : "Appointment deleted Successfully"
+        }

@@ -234,7 +234,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
         "role":"user"
     }
 
-@app.put('/user/appointment/')
+@app.put('/appointment/add')
 async def make_appointment(data:schemas.ConsultationData, token: str = Depends(oauth2_scheme), db:Session = Depends(get_db)):
     credentials_exception = HTTPException(
     status_code=401,
@@ -293,6 +293,10 @@ async def add_doctor(doctor_data: schemas.DoctorWithPassword, token: str = Depen
         "status": "Doctor added successfully!",
         "info" : response
     }
+
+@app.delete('/appointment/delete')
+async def delete_appointment(data : dict, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    services.delete_appointment(db, data.id)
 
 
 
