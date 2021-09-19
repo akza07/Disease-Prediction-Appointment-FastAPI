@@ -100,7 +100,7 @@ def list_to_array(test_case = []):
 
 
 
-def decision_tree():
+def multi_nomial_nb():
 
     from sklearn.naive_bayes import MultinomialNB
 
@@ -121,7 +121,7 @@ def decision_tree():
     return diseases[result[0]]
 
 
-print(decision_tree())
+print(multi_nomial_nb())
     
 
 
