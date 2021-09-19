@@ -46,7 +46,7 @@ def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessio
     if not user_dict:
         user_dict = services.get_doctor_by_email(db, form_data.username)
     if not user_dict:
-        user_dict = services.get_admin_by_mail(db,form_data.username)
+        user_dict = services.get_admin_by_email(db,form_data.username)
     if not user_dict:
         raise HTTPException(
             status_code=401,
@@ -217,7 +217,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:Session = Dep
             "role" : "doctor"
         }
     
-    if services.get_admin_by_mail(db, token_data.username):
+    if services.get_admin_by_email(db, token_data.username):
         return {
             "my_info": token_data.username,
             "role" : "admin"

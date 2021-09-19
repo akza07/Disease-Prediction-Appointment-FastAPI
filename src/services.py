@@ -117,7 +117,7 @@ def get_patients_for_doctor(db: Session, id: int, skip: int = 0, limit: int = 10
     return patients
 
 
-def get_admin_by_mail(db:Session, email :str):
+def get_admin_by_email(db:Session, email :str):
     return db.query(models.Admins).filter(models.Admins.email == email).first()
 
 def add_doctor(db: Session, data: schemas.DoctorWithPassword):
