@@ -181,7 +181,7 @@ async def check_disease( symptoms: Symptoms):
 async def create_user(user_data: schemas.UserCreate,  db: Session = Depends(get_db)):
     db_user = services.get_user_by_email(db, user_data.email)
     if db_user:
-         HTTPException(status_code=400, detail="E-mail already Registered")
+         raise HTTPException(status_code=400, detail="E-mail already Registered")
     access_token_expires = timedelta(minutes=services.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = services.create_access_token(
         data={"sub": user_data.email}, expires_delta=access_token_expires

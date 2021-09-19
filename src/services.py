@@ -135,6 +135,7 @@ def add_doctor(db: Session, data: schemas.DoctorWithPassword):
 
 def delete_appointment(db: Session, id: int):
     deleted = db.query(models.Consultation).filter(models.Consultation.appointment_id == id).delete()
+    db.commit()
     if deleted:
         return True
     return False
