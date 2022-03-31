@@ -11,4 +11,4 @@ Predict the disease based on given input using MultinomialMB
 
 use `http://127.0.0.1:8000/docs` to know and test the API end-points
 
-The Front-end is available at `https://github.com/TrisRdz/medicare-web`
+The Front-end is available at TrizRdz's repo [here](https://github.com/TrisRdz/medicare-web)
